@@ -281,6 +281,36 @@ describe 'cloud::compute::hypervisor' do
           )
       end
     end
+
+    context 'with Red Hat requirements' do
+      let :facts do
+        { :osfamily        => 'RedHat',
+          :concat_basedir  => '/var/lib/puppet/concat'
+        }
+      end
+
+      it 'ensure KVM is loaded' do
+        should contain_exec('load_kvm').with(
+          :user    => 'root',
+          :command => '/bin/sh /etc/sysconfig/modules/kvm.modules',
+          :onlyif  => '/usr/bin/test -e /etc/sysconfig/modules/kvm.modules'
+        )
+      end
+
+      it 'tune the host with a virtual hosts profile' do
+        should contain_service('tuned').with(:ensure => 'running')
+        should contain_exec('tuned-virtual-host').with(
+          :command => '/usr/sbin/tuned-adm profile virtual-host',
+          :unless  => '/usr/sbin/tuned-adm active | /bin/grep virtual-host'
+        )
+        should contain_file_line('libvirt-guests').with(
+          :path => '/etc/sysconfig/libvirt-guests',
+          :line => 'ON_BOOT=ignore',
+          :match => '^[\s#]*ON_BOOT=.*'
+        )
+      end
+    end
+
  end
 
   context 'on Debian platforms' do

@@ -110,6 +110,34 @@ Host *
     }
   }
 
+  # Red Hat requirements
+  if $::osfamily == 'RedHat' {
+
+    ensure_resource('exec', 'load_kvm', {
+      user    => 'root',
+      command => '/bin/sh /etc/sysconfig/modules/kvm.modules',
+      onlyif  => '/usr/bin/test -e /etc/sysconfig/modules/kvm.modules'
+    })
+    Class['nova::compute']-> Exec['load_kvm']
+
+    # Tune the host with a virtual hosts profile
+    ensure_resource('service', 'tuned', {
+      ensure => running
+    })
+    exec { 'tuned-virtual-host':
+      command => '/usr/sbin/tuned-adm profile virtual-host',
+      unless  => '/usr/sbin/tuned-adm active | /bin/grep virtual-host',
+      require => Service['tuned']
+    }
+    ensure_resource('file_line', 'libvirt-guests', {
+      path    => '/etc/sysconfig/libvirt-guests',
+      line    => 'ON_BOOT=ignore',
+      match   => '^[\s#]*ON_BOOT=.*',
+      require => Class['nova::compute::libvirt']
+    })
+
+  }
+
   Service<| title == 'dbus' |> { enable => true }
 
   Service<| title == 'libvirt-bin' |> { enable => true }

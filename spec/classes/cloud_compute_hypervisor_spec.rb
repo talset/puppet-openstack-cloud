@@ -309,6 +309,17 @@ describe 'cloud::compute::hypervisor' do
           :match => '^[\s#]*ON_BOOT=.*'
         )
       end
+
+      it 'remove libivrt default network' do
+        should contain_exec('virsh-net-destroy-default').with(
+          :onlyif =>  '/usr/bin/virsh net-list | grep default',
+          :command => '/usr/bin/virsh net-destroy default'
+        )
+        should contain_exec('virsh-net-undefine-default').with(
+          :onlyif =>  '/usr/bin/virsh net-list --inactive | grep default',
+          :command => '/usr/bin/virsh net-undefine default'
+        )
+      end
     end
 
  end

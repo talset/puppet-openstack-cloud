@@ -24,9 +24,15 @@ describe 'cloud::messaging' do
 
     let :params do
       {
-        :rabbit_names      => ['foo','boo','zoo'],
-        :rabbit_password   => 'secrete',
-        :cluster_node_type => 'disc'
+        :rabbit_names             => ['foo','boo','zoo'],
+        :rabbit_password          => 'secrete',
+        :cluster_node_type        => 'disc',
+        :ssl                      => false,
+        :ssl_cacert               => 'undef',
+        :ssl_cert                 => 'undef',
+        :ssl_key                  => 'undef',
+        :ssl_management_port      => 5671,
+        :ssl_stomp_port           => 6164,
       }
     end
 
@@ -36,7 +42,13 @@ describe 'cloud::messaging' do
           :config_cluster           => true,
           :cluster_nodes            => params[:rabbit_names],
           :wipe_db_on_cookie_change => true,
-          :cluster_node_type        => 'disc'
+          :cluster_node_type        => 'disc',
+          :ssl                      => false,
+          :ssl_cacert               => 'undef',
+          :ssl_cert                 => 'undef',
+          :ssl_key                  => 'undef',
+          :ssl_management_port      => 5671,
+          :ssl_stomp_port           => 6164,
         )
     end
 

@@ -67,7 +67,19 @@
 #   (optional) Syslog facility to receive log lines
 #   Defaults to 'LOG_LOCAL0'
 #
-
+# [*ssl*]
+#   (optional) Enable SSL support
+#   Defaults to false
+#
+# [*ssl_cacert*]
+#   (required with ssl) CA certificate to use for SSL support.
+#
+# [*ssl_cert*]
+#   (required with ssl) Certificate to use for SSL support.
+#
+# [*ssl_key*]
+#   (required with ssl) Private key to use for SSL support.
+#
 class cloud::image::api(
   $glance_db_host                   = '127.0.0.1',
   $glance_db_user                   = 'glance',
@@ -86,7 +98,11 @@ class cloud::image::api(
   $verbose                          = true,
   $debug                            = true,
   $log_facility                     = 'LOG_LOCAL0',
-  $use_syslog                       = true
+  $use_syslog                       = true,
+  $ssl                              = false,
+  $ssl_cacert                       = false,
+  $ssl_cert                         = false,
+  $ssl_key                          = false,
 ) {
 
   # Disable twice logging if syslog is enabled
@@ -98,6 +114,18 @@ class cloud::image::api(
     $log_dir           = '/var/log/glance'
     $log_file_api      = '/var/log/glance/api.log'
     $log_file_registry = '/var/log/glance/registry.log'
+  }
+
+  if $ssl {
+    if !$ssl_cacert {
+      fail('The ssl_cacert parameter is required when rabbit_ssl is set to true')
+    }
+    if !$ssl_cert {
+      fail('The ssl_cert parameter is required when rabbit_ssl is set to true')
+    }
+    if !$ssl_key {
+      fail('The ssl_key parameter is required when rabbit_ssl is set to true')
+    }
   }
 
   $encoded_glance_user     = uriescape($glance_db_user)
@@ -120,10 +148,20 @@ class cloud::image::api(
     bind_host             => $api_eth,
     bind_port             => $ks_glance_api_internal_port,
     use_syslog            => $use_syslog,
+    cert_file             => $ssl_cert,
+    key_file              => $ssl_key,
+    ca_file               => $ssl_cacert,
   }
 
   # TODO(EmilienM) Disabled for now
   # Follow-up: https://github.com/enovance/puppet-openstack-cloud/issues/160
+  #
+  # TODO(Spredzy) Add SSL configuration
+  #   rabbit_use_ssl
+  #   kombu_ssl_ca_certs
+  #   kombu_ssl_certfile
+  #   kombu_ssl_keyfile
+  #   kombu_ssl_version
   #
   # class { 'glance::notify::rabbitmq':
   #   rabbit_password => $rabbit_password,

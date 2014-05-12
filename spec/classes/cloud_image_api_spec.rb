@@ -46,64 +46,82 @@ describe 'cloud::image::api' do
     it 'configure glance-api' do
       should contain_class('glance::api').with(
         :database_connection   => 'mysql://glance:secrete@10.0.0.1/glance?charset=utf8',
-        :keystone_password     => 'secrete',
-        :registry_host         => '10.0.0.42',
-        :registry_port         => '9191',
-        :keystone_tenant       => 'services',
-        :keystone_user         => 'glance',
-        :show_image_direct_url => true,
-        :verbose               => true,
-        :debug                 => true,
-        :auth_host             => '10.0.0.1',
-        :log_facility          => 'LOG_LOCAL0',
-        :bind_host             => '10.0.0.1',
-        :bind_port             => '9292',
-        :use_syslog            => true,
-        :log_dir               => false,
-        :log_file              => false
+        :api_eth                          => '10.0.0.1',
+        :ssl                              => false,
+        :ssl_cacert                       => false,
+        :ssl_cert                         => false,
+        :ssl_key                          => false,
       )
     end
 
-    # TODO(EmilienM) Disabled for now
-    # Follow-up https://github.com/enovance/puppet-openstack-cloud/issues/160
-    #
-    # it 'configure glance notifications with rabbitmq backend' do
-    #   should contain_class('glance::notify::rabbitmq').with(
-    #       :rabbit_password => 'secrete',
-    #       :rabbit_userid   => 'glance',
-    #       :rabbit_host     => '10.0.0.1'
-    #     )
-    # end
-    it { should contain_glance_api_config('DEFAULT/notifier_driver').with_value('noop') }
+    shared_examples_for 'openstack image' do
 
-    it 'configure glance rbd backend' do
-      should contain_class('glance::backend::rbd').with(
+      it 'configure glance-api' do
+        should contain_class('glance::api').with(
+          :database_connection   => 'mysql://glance:secrete@10.0.0.1/glance',
+          :keystone_password     => 'secrete',
+          :registry_host         => '10.0.0.42',
+          :registry_port         => '9191',
+          :keystone_tenant       => 'services',
+          :keystone_user         => 'glance',
+          :show_image_direct_url => true,
+          :verbose               => true,
+          :debug                 => true,
+          :auth_host             => '10.0.0.1',
+          :log_facility          => 'LOG_LOCAL0',
+          :bind_host             => '10.0.0.1',
+          :bind_port             => '9292',
+          :use_syslog            => true,
+          :log_dir               => false,
+          :log_file              => false,
+          :cert_file             => false,
+          :key_file              => false,
+          :ca_file               => false,
+        )
+      end
+
+      # TODO(EmilienM) Disabled for now
+      # Follow-up https://github.com/enovance/puppet-openstack-cloud/issues/160
+      #
+      # it 'configure glance notifications with rabbitmq backend' do
+      #   should contain_class('glance::notify::rabbitmq').with(
+      #       :rabbit_password => 'secrete',
+      #       :rabbit_userid   => 'glance',
+      #       :rabbit_host     => '10.0.0.1'
+      #     )
+      # end
+      it { should contain_glance_api_config('DEFAULT/notifier_driver').with_value('noop') }
+
+      it 'configure glance rbd backend' do
+        should contain_class('glance::backend::rbd').with(
           :rbd_store_pool => 'images',
           :rbd_store_user => 'glance'
         )
+      end
+
+      it 'configure crontab to clean glance cache' do
+        should contain_class('glance::cache::cleaner')
+        should contain_class('glance::cache::pruner')
+      end
+
     end
 
-    it 'configure crontab to clean glance cache' do
-      should contain_class('glance::cache::cleaner')
-      should contain_class('glance::cache::pruner')
+    context 'on Debian platforms' do
+      let :facts do
+        { :osfamily => 'Debian' }
+      end
+
+      it_configures 'openstack image api'
     end
 
-  end
+    context 'on RedHat platforms' do
+      let :facts do
+        { :osfamily => 'RedHat' }
+      end
 
-  context 'on Debian platforms' do
-    let :facts do
-      { :osfamily => 'Debian' }
+      it_configures 'openstack image api'
     end
 
-    it_configures 'openstack image api'
-  end
-
-  context 'on RedHat platforms' do
-    let :facts do
-      { :osfamily => 'RedHat' }
-    end
-
-    it_configures 'openstack image api'
   end
 
 end

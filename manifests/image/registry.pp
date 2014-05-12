@@ -55,7 +55,19 @@
 #   (optional) Syslog facility to receive log lines
 #   Defaults to 'LOG_LOCAL0'
 #
-
+# [*ssl*]
+#   (optional) Enable SSL support
+#   Defaults to false
+#
+# [*ssl_cacert*]
+#   (required with ssl) CA certificate to use for SSL support.
+#
+# [*ssl_cert*]
+#   (required with ssl) Certificate to use for SSL support.
+#
+# [*ssl_key*]
+#   (required with ssl) Private key to use for SSL support.
+#
 class cloud::image::registry(
   $glance_db_host                   = '127.0.0.1',
   $glance_db_user                   = 'glance',
@@ -68,7 +80,11 @@ class cloud::image::registry(
   $verbose                          = true,
   $debug                            = true,
   $log_facility                     = 'LOG_LOCAL0',
-  $use_syslog                       = true
+  $use_syslog                       = true,
+  $ssl                              = false,
+  $ssl_cacert                       = false,
+  $ssl_cert                         = false,
+  $ssl_key                          = false,
 ) {
 
   # Disable twice logging if syslog is enabled
@@ -80,6 +96,18 @@ class cloud::image::registry(
     $log_dir           = '/var/log/glance'
     $log_file_api      = '/var/log/glance/api.log'
     $log_file_registry = '/var/log/glance/registry.log'
+  }
+
+  if $ssl {
+    if !$ssl_cacert {
+      fail('The ssl_cacert parameter is required when ssl is set to true')
+    }
+    if !$ssl_cert {
+      fail('The ssl_cert parameter is required when ssl is set to true')
+    }
+    if !$ssl_key {
+      fail('The ssl_key parameter is required when ssl is set to true')
+    }
   }
 
   $encoded_glance_user     = uriescape($glance_db_user)
@@ -99,6 +127,9 @@ class cloud::image::registry(
     bind_port           => $ks_glance_registry_internal_port,
     use_syslog          => $use_syslog,
     log_facility        => $log_facility,
+    cert_file           => $ssl_cert,
+    key_file            => $ssl_key,
+    ca_file             => $ssl_cacert,
   }
 
   exec {'glance_db_sync':

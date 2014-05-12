@@ -40,45 +40,63 @@ describe 'cloud::image::registry' do
     it 'configure glance-registry' do
       should contain_class('glance::registry').with(
         :database_connection   => 'mysql://glance:secrete@10.0.0.1/glance?charset=utf8',
-        :keystone_password     => 'secrete',
-        :keystone_tenant       => 'services',
-        :keystone_user         => 'glance',
-        :verbose               => true,
-        :debug                 => true,
-        :auth_host             => '10.0.0.1',
-        :log_facility          => 'LOG_LOCAL0',
-        :bind_host             => '10.0.0.1',
-        :bind_port             => '9191',
-        :use_syslog            => true,
-        :log_dir               => false,
-        :log_file              => false
+        :api_eth                          => '10.0.0.1',
+        :ssl                              => false,
+        :ssl_cacert                       => false,
+        :ssl_cert                         => false,
+        :ssl_key                          => false,
       )
     end
 
-    it 'checks if Glance DB is populated' do
-      should contain_exec('glance_db_sync').with(
-        :command => 'glance-manage db_sync',
-        :user    => 'glance',
-        :path    => '/usr/bin',
-        :unless  => '/usr/bin/mysql glance -h 10.0.0.1 -u glance -psecrete -e "show tables" | /bin/grep Tables'
-      )
+    shared_examples_for 'openstack image' do
+
+      it 'configure glance-registry' do
+        should contain_class('glance::registry').with(
+          :database_connection   => 'mysql://glance:secrete@10.0.0.1/glance',
+          :keystone_password     => 'secrete',
+          :keystone_tenant       => 'services',
+          :keystone_user         => 'glance',
+          :verbose               => true,
+          :debug                 => true,
+          :auth_host             => '10.0.0.1',
+          :log_facility          => 'LOG_LOCAL0',
+          :bind_host             => '10.0.0.1',
+          :bind_port             => '9191',
+          :use_syslog            => true,
+          :log_dir               => false,
+          :log_file              => false,
+          :cert_file             => false,
+          :key_file              => false,
+          :ca_file               => false,
+        )
+      end
+
+      it 'checks if Glance DB is populated' do
+        should contain_exec('glance_db_sync').with(
+          :command => 'glance-manage db_sync',
+          :user    => 'glance',
+          :path    => '/usr/bin',
+          :unless  => '/usr/bin/mysql glance -h 10.0.0.1 -u glance -psecrete -e "show tables" | /bin/grep Tables'
+        )
+      end
     end
-  end
 
-  context 'on Debian platforms' do
-    let :facts do
-      { :osfamily => 'Debian' }
+    context 'on Debian platforms' do
+      let :facts do
+        { :osfamily => 'Debian' }
+      end
+
+      it_configures 'openstack image registry'
     end
 
-    it_configures 'openstack image registry'
-  end
+    context 'on RedHat platforms' do
+      let :facts do
+        { :osfamily => 'RedHat' }
+      end
 
-  context 'on RedHat platforms' do
-    let :facts do
-      { :osfamily => 'RedHat' }
+      it_configures 'openstack image registry'
     end
 
-    it_configures 'openstack image registry'
   end
 
 end

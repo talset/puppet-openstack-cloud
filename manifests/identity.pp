@@ -318,7 +318,32 @@
 #   (optional) Amount of time a token should remain valid (in seconds)
 #   Defaults to '3600' (1 hour)
 #
-
+# [*ssl*]
+#   (optional) Toggle for SSL support on the keystone eventlet servers.
+#   (boolean value)
+#   Defaults to false
+#
+# [*ssl_cert*]
+#   (optional) Path of the certfile for SSL. (string value)
+#   Defaults to undef
+#
+# [*ssl_key*]
+#   (optional) Path of the keyfile for SSL. (string value)
+#   Defaults to undef
+#
+# [*ssl_cacert*]
+#   (optional) Path of the ca cert file for SSL. (string value)
+#   Defaults to undef
+#
+# [*ssl_ca_key*]
+#   (optional) Path of the CA key file for SSL (string value)
+#   Defaults to undef
+#
+# [*ssl_cert_subject*]
+#   (optional) SSL Certificate Subject (auto generated certificate)
+#   (string value)
+#   Defaults to undef
+#
 class cloud::identity (
   $swift_enabled                = true,
   $identity_roles_addons        = ['SwiftOperator', 'ResellerAdmin'],
@@ -389,7 +414,13 @@ class cloud::identity (
   $log_facility                 = 'LOG_LOCAL0',
   $use_syslog                   = true,
   $ks_token_expiration          = 3600,
-  $token_driver                 = 'keystone.token.backends.sql.Token'
+  $token_driver                 = 'keystone.token.backends.sql.Token',
+  $ssl                          = false,
+  $ssl_cakey                    = undef,
+  $ssl_cacert                   = undef,
+  $ssl_cert                     = undef,
+  $ssl_key                      = undef,
+  $ssl_cert_subject             = undef,
 ){
 
   $encoded_user     = uriescape($keystone_db_user)
@@ -421,7 +452,13 @@ class cloud::identity (
     public_port      => $ks_keystone_public_port,
     admin_port       => $ks_keystone_admin_port,
     token_driver     => $token_driver,
-    token_expiration => $ks_token_expiration
+    token_expiration => $ks_token_expiration,
+    enable_ssl       => $ssl,
+    ssl_certfile     => $ssl_cert,
+    ssl_keyfile      => $ssl_key,
+    ssl_ca_certs     => $ssl_cacert,
+    ssl_ca_key       => $ssl_cakey,
+    ssl_cert_subject => $ssl_cert_subject,
   }
 
   keystone_config {

@@ -13,38 +13,36 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Unit tests for cloud::telemetry::server class
+# Unit tests for cloud::telemetry class
 #
 
 require 'spec_helper'
 
-describe 'cloud::telemetry::server' do
+describe 'cloud::telemetry' do
 
-  shared_examples_for 'openstack telemetry server' do
-
-    let :pre_condition do
-      "class { 'cloud::telemetry':
-        ceilometer_secret          => 'secrete',
-        rabbit_hosts               => ['10.0.0.1'],
-        rabbit_password            => 'secrete',
-        ks_keystone_internal_host  => '10.0.0.1',
-        ks_keystone_internal_port  => '5000',
-        ks_keystone_internal_proto => 'http',
-        ks_ceilometer_password     => 'secrete',
-        region                     => 'MyRegion',
-        log_facility               => 'LOG_LOCAL0',
-        use_syslog                 => true,
-        verbose                    => true,
-        debug                      => true }"
-    end
+  shared_examples_for 'openstack telemetry' do
 
     let :params do
-      { :ks_keystone_internal_host            => '10.0.0.1',
-        :ks_keystone_internal_proto           => 'http',
-        :ks_ceilometer_internal_port          => '8777',
-        :ks_ceilometer_password               => 'secrete',
-        :api_eth                              => '10.0.0.1',
-        :mongo_nodes                          => ['node1', 'node2', 'node3'] }
+      {
+        :ceilometer_secret          => 'secrete',
+        :rabbit_hosts               => ['10.0.0.1'],
+        :rabbit_password            => 'secrete',
+	:rabbit_use_ssl             => true,
+	:kombu_ssl_ca_certs         => '/ssl/ca/certs',
+	:kombu_ssl_certfile         => '/ssl/cert/file',
+	:kombu_ssl_keyfile          => '/ssl/key/file',
+	:kombu_ssl_version          => 'SSLv3',
+        :ks_keystone_internal_host  => '10.0.0.1',
+        :ks_keystone_internal_port  => '5000',
+        :ks_keystone_internal_proto => 'http',
+        :ks_ceilometer_password     => 'secrete',
+        :region                     => 'MyRegion',
+        :log_facility               => 'LOG_LOCAL0',
+        :use_syslog                 => true,
+        :verbose                    => true,
+        :debug                      => true,
+	:ssl_cacert                 => '/ssl/ca/cert'
+      }
     end
 
     it 'configure ceilometer common' do
@@ -54,6 +52,11 @@ describe 'cloud::telemetry::server' do
           :rabbit_userid           => 'ceilometer',
           :rabbit_hosts            => ['10.0.0.1'],
           :rabbit_password         => 'secrete',
+	  :rabbit_use_ssl          => true,
+	  :kombu_ssl_ca_certs      => '/ssl/ca/certs',
+	  :kombu_ssl_certfile      => '/ssl/cert/file',
+	  :kombu_ssl_keyfile       => '/ssl/key/file',
+	  :kombu_ssl_version       => 'SSLv3',
           :metering_secret         => 'secrete',
           :use_syslog              => true,
           :log_facility            => 'LOG_LOCAL0',
@@ -62,67 +65,27 @@ describe 'cloud::telemetry::server' do
       should contain_class('ceilometer::agent::auth').with(
           :auth_password => 'secrete',
           :auth_url      => 'http://10.0.0.1:5000/v2.0',
-          :auth_region   => 'MyRegion'
+          :auth_region   => 'MyRegion',
+	  :auth_cacert   => '/ssl/ca/cert'
         )
     end
 
-    it 'configure ceilometer collector' do
-      should contain_class('ceilometer::collector')
-    end
-
-    it 'configure ceilometer notification agent' do
-      should contain_class('ceilometer::agent::notification')
-    end
-
-    it 'configure ceilometer alarm evaluator' do
-      should contain_class('ceilometer::alarm::evaluator')
-    end
-
-    it 'configure ceilometer alarm notifier' do
-      should contain_class('ceilometer::alarm::notifier')
-    end
-
-    it 'configure ceilometer-api' do
-      should contain_class('ceilometer::api').with(
-          :keystone_password => 'secrete',
-          :keystone_host     => '10.0.0.1',
-          :keystone_protocol => 'http',
-          :host              => '10.0.0.1'
-        )
-    end
-
-    it 'configure ceilometer-expirer' do
-      should contain_class('ceilometer::expirer').with(
-          :time_to_live => '2592000',
-          :minute       => '0',
-          :hour         => '0'
-        )
-    end
-
-    it 'synchronize ceilometer db indexes' do
-      should contain_class('ceilometer::db').with(
-        :sync_db             => true,
-        :database_connection => 'mongodb://node1,node2,node3/ceilometer?replicaSet=ceilometer'
-        )
-    end
   end
 
   context 'on Debian platforms' do
     let :facts do
-      { :osfamily => 'Debian',
-        :hostname => 'node1' }
+      { :osfamily => 'Debian' }
     end
 
-    it_configures 'openstack telemetry server'
+    it_configures 'openstack telemetry'
   end
 
   context 'on RedHat platforms' do
     let :facts do
-      { :osfamily => 'RedHat',
-        :hostname => 'node1' }
+      { :osfamily => 'RedHat' }
     end
 
-    it_configures 'openstack telemetry server'
+    it_configures 'openstack telemetry'
   end
 
 end

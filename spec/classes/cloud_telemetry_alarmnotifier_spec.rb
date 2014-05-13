@@ -38,6 +38,16 @@ describe 'cloud::telemetry::alarmnotifier' do
         debug                      => true }"
     end
 
+    let :params do
+      {
+        :enabled                        => true,
+	:notifier_rpc_topic             => 'atopic',
+	:rest_notifier_certificate_file => '/ssl/cert/file',
+	:rest_notifier_certificate_key  => '/ssl/cert/key',
+	:rest_notifier_ssl_verify       => true,
+      }
+    end
+
     it 'configure ceilometer common' do
       should contain_class('ceilometer').with(
           :verbose                 => true,
@@ -58,7 +68,13 @@ describe 'cloud::telemetry::alarmnotifier' do
     end
 
     it 'configure ceilometer alarm notifier' do
-      should contain_class('ceilometer::alarm::notifier')
+      should contain_class('ceilometer::alarm::notifier').with(
+        :enabled                        => true,
+	:notifier_rpc_topic             => 'atopic',
+	:rest_notifier_certificate_file => '/ssl/cert/file',
+	:rest_notifier_certificate_key  => '/ssl/cert/key',
+	:rest_notifier_ssl_verify       => true,
+      )
     end
   end
 

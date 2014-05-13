@@ -15,12 +15,42 @@
 #
 # Telemetry Alarm Notifier nodes
 #
-
+#  [*enabled*]
+#   (optional) should the service be enabled
+#    Defaults to true
+#
+#  [*notifier_rpc_topic*]
+#    (optional) define on which topic the notifier will have access
+#    Defaults to undef
+#
+#  [*rest_notifier_certificate_key*]
+#    (optional) define the certificate key for the rest service
+#    Defaults to undef
+#
+#  [*rest_notifier_certificate_file*]
+#    (optional) define the certificate file for the rest service
+#    Defaults to undef
+#
+#  [*rest_notifier_ssl_verify*]
+#    (optional) should the ssl verify parameter be enabled
+#    Defaults to undef
+#
 class cloud::telemetry::alarmnotifier(
+  $enabled                        = true,
+  $notifier_rpc_topic             = undef,
+  $rest_notifier_certificate_key  = undef,
+  $rest_notifier_certificate_file = undef,
+  $rest_notifier_ssl_verify       = true,
 ){
 
   include 'cloud::telemetry'
 
-  class { 'ceilometer::alarm::notifier': }
+  class { 'ceilometer::alarm::notifier':
+    enabled                        => $enabled,
+    notifier_rpc_topic             => $notifier_rpc_topic,
+    rest_notifier_certificate_file => $rest_notifier_certificate_file,
+    rest_notifier_certificate_key  => $rest_notifier_certificate_key,
+    rest_notifier_ssl_verify       => $rest_notifier_ssl_verify,
+  }
 
 }

@@ -27,6 +27,28 @@
 #   (optional) Password to connect to nova queues.
 #   Defaults to 'rabbitpassword'
 #
+# [*rabbit_use_ssl*]
+#   (optional) Connect over SSL for RabbitMQ
+#   Defaults to false
+#
+# [*kombu_ssl_ca_certs*]
+#   (optional) SSL certification authority file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_certfile*]
+#   (optional) SSL cert file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_keyfile*]
+#   (optional) SSL key file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_version*]
+#   (optional) SSL version to use (valid only if SSL enabled).
+#   Valid values are TLSv1, SSLv23 and SSLv3. SSLv2 may be
+#   available on some distributions.
+#   Defaults to 'SSLv3'
+#
 # [*verbose*]
 #   (optional) Set log output to verbose output
 #   Defaults to true
@@ -57,7 +79,20 @@
 #
 # [*dhcp_lease_duration*]
 #   (optionnal) DHCP Lease duration (in seconds)
-#   Defauls to '120'
+#   Defaults to '120'
+#
+# [*ssl*]
+#   (optional) Enable SSL (boolean)
+#   Dfaults false
+#
+# [*ssl_cacert*]
+#   (required with ssl) CA certificate to use for SSL support.
+#
+# [*ssl_cert*]
+#   (required with ssl) Certificate to use for SSL support.
+#
+# [*ssl_key*]
+#   (required with ssl) Private key to use for SSL support.
 #
 
 class cloud::network(
@@ -65,13 +100,22 @@ class cloud::network(
   $debug                    = true,
   $rabbit_hosts             = ['127.0.0.1:5672'],
   $rabbit_password          = 'rabbitpassword',
+  $rabbit_use_ssl           = false,
+  $kombu_ssl_ca_certs       = undef,
+  $kombu_ssl_certfile       = undef,
+  $kombu_ssl_keyfile        = undef,
+  $kombu_ssl_version        = 'SSLv3',
   $tunnel_eth               = '127.0.0.1',
   $api_eth                  = '127.0.0.1',
   $provider_vlan_ranges     = ['physnet1:1000:2999'],
   $provider_bridge_mappings = ['physnet1:br-eth1'],
   $use_syslog               = true,
   $log_facility             = 'LOG_LOCAL0',
-  $dhcp_lease_duration      = '120'
+  $dhcp_lease_duration      = '120',
+  $ssl                      = false,
+  $ssl_cacert               = false,
+  $ssl_cert                 = false,
+  $ssl_key                  = false,
 ) {
 
   # Disable twice logging if syslog is enabled
@@ -93,6 +137,11 @@ class cloud::network(
     rabbit_hosts            => $rabbit_hosts,
     rabbit_password         => $rabbit_password,
     rabbit_virtual_host     => '/',
+    rabbit_use_ssl          => $rabbit_use_ssl,
+    kombu_ssl_ca_certs      => $kombu_ssl_ca_certs,
+    kombu_ssl_certfile      => $kombu_ssl_certfile,
+    kombu_ssl_keyfile       => $kombu_ssl_keyfile,
+    kombu_ssl_version       => $kombu_ssl_version,
     bind_host               => $api_eth,
     log_facility            => $log_facility,
     use_syslog              => $use_syslog,
@@ -102,6 +151,10 @@ class cloud::network(
     log_dir                 => $log_dir,
     dhcp_lease_duration     => $dhcp_lease_duration,
     report_interval         => '30',
+    use_ssl                 => $ssl,
+    ca_file                 => $ssl_cacert,
+    cert_file               => $ssl_cert,
+    key_file                => $ssl_key,
   }
 
   class { 'neutron::agents::ovs':

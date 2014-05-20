@@ -40,6 +40,28 @@
 #   (optional) Password to connect to cinder queues.
 #   Defaults to 'rabbitpassword'
 #
+# [*rabbit_use_ssl*]
+#   (optional) Connect over SSL for RabbitMQ
+#   Defaults to false
+#
+# [*kombu_ssl_ca_certs*]
+#   (optional) SSL certification authority file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_certfile*]
+#   (optional) SSL cert file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_keyfile*]
+#   (optional) SSL key file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_version*]
+#   (optional) SSL version to use (valid only if SSL enabled).
+#   Valid values are TLSv1, SSLv23 and SSLv3. SSLv2 may be
+#   available on some distributions.
+#   Defaults to 'SSLv3'
+#
 # [*verbose*]
 #   (optional) Set log output to verbose output
 #   Defaults to true
@@ -56,18 +78,39 @@
 #   (optional) Syslog facility to receive log lines
 #   Defaults to 'LOG_LOCAL0'
 #
-
+# [*ssl*]
+#   (optional) Enable SSL support
+#   Defaults to false
+#
+# [*ssl_cacert*]
+#   (required with ssl) CA certificate to use for SSL support.
+#
+# [*ssl_cert*]
+#   (required with ssl) Certificate to use for SSL support.
+#
+# [*ssl_key*]
+#   (required with ssl) Private key to use for SSL support.
+#
 class cloud::volume(
-  $cinder_db_host             = '127.0.0.1',
-  $cinder_db_user             = 'cinder',
-  $cinder_db_password         = 'cinderpassword',
-  $rabbit_hosts               = ['127.0.0.1:5672'],
-  $rabbit_password            = 'rabbitpassword',
-  $verbose                    = true,
-  $debug                      = true,
-  $log_facility               = 'LOG_LOCAL0',
-  $storage_availability_zone  = 'nova',
-  $use_syslog                 = true
+  $cinder_db_host            = '127.0.0.1',
+  $cinder_db_user            = 'cinder',
+  $cinder_db_password        = 'cinderpassword',
+  $rabbit_hosts              = ['127.0.0.1:5672'],
+  $rabbit_password           = 'rabbitpassword',
+  $rabbit_use_ssl            = false,
+  $kombu_ssl_ca_certs        = undef,
+  $kombu_ssl_certfile        = undef,
+  $kombu_ssl_keyfile         = undef,
+  $kombu_ssl_version         = 'SSLv3',
+  $verbose                   = true,
+  $debug                     = true,
+  $log_facility              = 'LOG_LOCAL0',
+  $storage_availability_zone = 'nova',
+  $use_syslog                = true,
+  $ssl                       = false,
+  $ssl_cacert                = false,
+  $ssl_cert                  = false,
+  $ssl_key                   = false,
 ) {
 
   # Disable twice logging if syslog is enabled
@@ -82,16 +125,25 @@ class cloud::volume(
 
 
   class { 'cinder':
-    sql_connection            => "mysql://${encoded_user}:${encoded_password}@${cinder_db_host}/cinder?charset=utf8",
-    rabbit_userid             => 'cinder',
-    rabbit_hosts              => $rabbit_hosts,
-    rabbit_password           => $rabbit_password,
-    rabbit_virtual_host       => '/',
-    verbose                   => $verbose,
-    debug                     => $debug,
-    log_dir                   => $log_dir,
-    log_facility              => $log_facility,
-    use_syslog                => $use_syslog,
+    sql_connection      => "mysql://${encoded_user}:${encoded_password}@${cinder_db_host}/cinder?charset=utf8",
+    rabbit_userid       => 'cinder',
+    rabbit_hosts        => $rabbit_hosts,
+    rabbit_password     => $rabbit_password,
+    rabbit_virtual_host => '/',
+    rabbit_use_ssl      => $rabbit_use_ssl,
+    kombu_ssl_ca_certs  => $kombu_ssl_ca_certs,
+    kombu_ssl_certfile  => $kombu_ssl_certfile,
+    kombu_ssl_keyfile   => $kombu_ssl_keyfile,
+    kombu_ssl_version   => $kombu_ssl_version,
+    verbose             => $verbose,
+    debug               => $debug,
+    log_dir             => $log_dir,
+    log_facility        => $log_facility,
+    use_syslog          => $use_syslog,
+    use_ssl             => $ssl,
+    ca_file             => $ssl_cacert,
+    cert_file           => $ssl_cert,
+    key_file            => $ssl_key,
     # https://review.openstack.org/#/c/92993/
     # storage_availability_zone => $storage_availability_zone
   }

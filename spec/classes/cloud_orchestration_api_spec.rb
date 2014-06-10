@@ -48,7 +48,10 @@ describe 'cloud::orchestration::api' do
       { :ks_heat_internal_port            => '8004',
         :ks_heat_cfn_internal_port        => '8000',
         :ks_heat_cloudwatch_internal_port => '8003',
-        :api_eth                          => '10.0.0.1' }
+        :api_eth                          => '10.0.0.1',
+        :ssl                              => true,
+        :ssl_cert                         => '/ssl/cert',
+        :ssl_key                          => '/ssl/key' }
     end
 
     it 'configure heat common' do
@@ -74,17 +77,26 @@ describe 'cloud::orchestration::api' do
       should contain_class('heat::api').with(
           :bind_host => '10.0.0.1',
           :bind_port => '8004',
-          :workers   => '8'
+          :workers   => '8',
+          :use_ssl   => true,
+          :cert_file => '/ssl/cert',
+          :key_file  => '/ssl/key',
         )
       should contain_class('heat::api_cfn').with(
           :bind_host => '10.0.0.1',
           :bind_port => '8000',
-          :workers   => '8'
+          :workers   => '8',
+          :use_ssl   => true,
+          :cert_file => '/ssl/cert',
+          :key_file  => '/ssl/key',
         )
       should contain_class('heat::api_cloudwatch').with(
           :bind_host => '10.0.0.1',
           :bind_port => '8003',
-          :workers   => '8'
+          :workers   => '8',
+          :use_ssl   => true,
+          :cert_file => '/ssl/cert',
+          :key_file  => '/ssl/key',
         )
     end
 

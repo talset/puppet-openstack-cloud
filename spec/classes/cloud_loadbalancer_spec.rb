@@ -358,14 +358,15 @@ describe 'cloud::loadbalancer' do
       )}
     end
 
-    context 'configure OpenStack Horizon SSL with backward compatibility' do
+    context 'configure OpenStack Horizon SSL' do
       before do
         params.merge!(
           :horizon_ssl      => true,
+          :horizon_port     => '80',
           :horizon_ssl_port => '443'
         )
       end
-      it { should contain_haproxy__listen('horizon_cluster').with(
+      it { should contain_haproxy__listen('horizon_ssl_cluster').with(
         :ipaddress => [params[:vip_public_ip]],
         :ports     => '443',
         :options   => {
@@ -378,27 +379,23 @@ describe 'cloud::loadbalancer' do
       )}
     end
 
-    context 'configure OpenStack Horizon SSL binding' do
+    context 'configure OpenStack Horizon without SSL' do
       before do
         params.merge!(
-          :horizon_port         => '443',
-          :horizon_ssl          => false,
+          :horizon_port         => '80',
           :horizon_ssl_port     => false,
-          :horizon_bind_options => ['ssl', 'crt']
         )
       end
       it { should contain_haproxy__listen('horizon_cluster').with(
         :ipaddress => [params[:vip_public_ip]],
-        :ports     => '443',
+        :ports     => '80',
         :options   => {
           'mode'           => 'http',
           'http-check'     => 'expect ! rstatus ^5',
           'option'         => ["tcpka", "forwardfor", "tcplog", "httpchk GET  /  \"HTTP/1.0\\r\\nUser-Agent: HAproxy-myhost\""],
           'cookie'         => 'sessionid prefix',
           'balance'        => 'leastconn',
-          'reqadd'         => 'X-Forwarded-Proto:\ https if { ssl_fc }'
         },
-        :bind_options => ['ssl', 'crt']
       )}
     end
 

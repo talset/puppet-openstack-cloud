@@ -134,6 +134,9 @@ mod 'rhnreg_ks',
 mod 'rsync',
   :git => 'git://github.com/enovance/puppetlabs-rsync.git',
   :ref => '7122983d89bf68bc4170415cc03212f6a8a4636e'
+mod 'sensu',
+  :git => 'git://github.com/enovance/sensu-puppet.git',
+  :ref => '6243d1a2734d131138041f0347b6343228655f4a'
 mod 'ssh',
   :git => 'git://github.com/enovance/puppet-ssh.git',
   :ref => '10675c0d80511a8cdd514af67b695887fa97ec40'

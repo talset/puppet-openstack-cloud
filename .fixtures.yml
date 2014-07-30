@@ -114,6 +114,9 @@ fixtures:
     'kmod':
       repo: 'git://github.com/enovance/puppet-kmod.git'
       ref: 'accc40093e6f8ee9cc472e9eb6ba3bab4bad3a1f'
+    'sensu':
+      repo: 'git://github.com/enovance/sensu-puppet.git'
+      ref: '6243d1a2734d131138041f0347b6343228655f4a'
     'ssh':
       repo: 'git://github.com/enovance/puppet-ssh.git'
       ref: '10675c0d80511a8cdd514af67b695887fa97ec40'
